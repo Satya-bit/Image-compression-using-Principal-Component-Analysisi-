@@ -1,0 +1,162 @@
+#Importing required libraries and modules
+import numpy as np
+import sys
+import PIL
+from PIL import Image,ImageOps
+import cv2
+
+def zeros_matrix(rows, cols):
+    A = []
+    for i in range(rows):
+        A.append([])
+        for j in range(cols):
+            A[-1].append(0.0)
+
+    return A
+
+def matrix_multiply(A,B):
+    rowsA = len(A)
+    colsA = len(A[0])
+
+    rowsB = len(B)
+    colsB = len(B[0])
+
+    if colsA != rowsB:
+        print('Number of A columns must equal number of B rows.')
+        sys.exit()
+
+    C = zeros_matrix(rowsA, colsB)
+
+    for i in range(rowsA):
+        for j in range(colsB):
+            total = 0
+            for ii in range(colsA):
+                total += A[i][ii] * B[ii][j]
+            C[i][j] = total
+
+    return C
+
+def transpose(M):
+    rows, cols = M.shape
+    mt = np.zeros((cols, rows))
+
+    for i in range(rows):
+        for j in range(cols):
+            mt[j][i] = M[i][j]
+
+    return mt
+
+def get_covariance_matrix(A):
+    N, M = A.shape
+    ret = np.reshape(np.zeros(N*M), (N,M))
+
+    for n in range(0, N):
+        for m in range(0, M):
+            ret[n][m] = calc_covariance(A, n, m)
+
+    return ret
+
+def calc_covariance(A, n, m):
+    nominator = np.sum((A[n] - np.average(A[n])) * (A[m] - np.average(A[m])))
+    denominator = A.shape[0] - 1
+    return nominator/denominator
+
+def householder_reflection(a, e):
+
+    assert a.ndim == 1
+    assert np.allclose(1, np.sum(e**2))
+
+    u = a - np.sign(a[0]) * np.linalg.norm(a) * e
+    v = u / np.linalg.norm(u)
+    H = np.eye(len(a)) - 2 * np.outer(v, v)
+
+    return H
+
+def qr_decomposition(A):
+
+    n, m = A.shape
+    assert n >= m
+
+    Q = np.eye(n)
+    R = A.copy()
+
+    for i in range(m - int(n==m)):
+        r = R[i:, i]
+
+        if np.allclose(r[1:], 0):
+            continue
+
+        # e is the i-th basis vector of the minor matrix.
+        e = np.zeros(n-i)
+        e[0] = 1
+
+        H = np.eye(n)
+        H[i:, i:] = householder_reflection(r, e)
+
+        Q = Q @ H.T
+        R = H @ R
+
+    return Q, R
+
+def eigen_decomposition(A, max_iter=100):
+    A_k = A
+    Q_k = np.eye( A.shape[1] )
+
+    for k in range(max_iter):
+        Q, R = qr_decomposition(A_k)
+        Q_k = Q_k @ Q
+        A_k = R @ Q
+
+    eigenvalues = np.diag(A_k)
+    eigenvectors = Q_k
+    return eigenvalues, eigenvectors
+
+# Loading the input image
+input_image = Image.open("D:/AU_courses/Sem-3/Linear-Algebra-SY/Project/.idea/cow.jpg")
+
+# Converting the input grayscale image (dimensions = 225*225*3) to 2-dimensional grayscale image(dimensions = 225*225).
+input_image = ImageOps.grayscale(input_image)
+# input_image.show()
+
+# Converting the grayscale image to a 2-dimensional matrix.
+input_array = np.array(input_image)
+rows, columns = input_array.shape
+
+# PCA Step-1 i.e. Calculating mean vector.
+mean_vector = np.array(input_array.mean(axis = 0))
+
+# PCA Step-2 i.e. Calculating difference matrix.
+diff_matrix = np.array(input_array - mean_vector)
+
+#PCA Step-3 i.e. Calculating covariance matrix.
+covariance_matrix = get_covariance_matrix(diff_matrix)
+
+# Calculating Q(columns of Q are orthogonal) and R(Upper triangular matrix).
+q_matrix, r_matrix = qr_decomposition(covariance_matrix)
+
+# PCA Step-4 i.e. Calculating eigenvalues and eigenvectors of covariance matrix and sorting the eigenvalues and corresponding eigenvectors in decreasing order.
+eig_values, eig_vectors = eigen_decomposition(covariance_matrix)
+
+# Following 3 lines of code sorts eigenvalues and eigenvectors in decreasing order.
+dec = eig_values.argsort()[::-1]
+eigenValuesDec = eig_values[dec]
+eigenVectorsDec = eig_vectors[:,dec]
+
+pc = int(input("Enter number or Principal components needed : "))
+# reduced_eigenvectors is a matrix containing 'pc' principal components.
+reduced_eigenvectors = np.array(eigenVectorsDec[:, :pc])
+reduced_eigenvectors_transpose = transpose(reduced_eigenvectors)
+
+X = matrix_multiply(reduced_eigenvectors_transpose, diff_matrix)
+
+#PCA Step-5 i.e. Reconstructing the image.
+inv_transformation = matrix_multiply(reduced_eigenvectors, X) + mean_vector
+
+# Converting the 2-dimensional matrix to image and displaying the compressed image.
+output_image = Image.fromarray(inv_transformation)
+
+# Saving the compressed image.
+cv2.imwrite("cow70.jpg", inv_transformation)
+
+# Displaying the compressed image.
+output_image.show()
