@@ -34,12 +34,12 @@ The project asks the user to upload the image to be compressed. The image is com
 
 ![image](https://github.com/Satya-bit/Image-compression-using-Principal-Component-Analysisi-/assets/70309925/03b8cef4-4275-4803-bc64-1171e7083a5d)
 
-**=> Step-3** Then we calculated mean of all columns from that matrix
+**=> Step-3** Then I calculated mean of all columns from that matrix
 X(mean) = [ X1(mean) X2(mean) X3(mean) …… XN(mean) ] and subtract mean columns from respective columns.
 
 ![image](https://github.com/Satya-bit/Image-compression-using-Principal-Component-Analysisi-/assets/70309925/220050c3-bd21-484d-87bf-04018829472c)
 
-**=> Step-4** Then we find covariance matrix S for centered data 
+**=> Step-4** Then I find covariance matrix S for centered data 
 
 ![image](https://github.com/Satya-bit/Image-compression-using-Principal-Component-Analysisi-/assets/70309925/e0e87ef4-c4c0-4a26-bcb3-70b05b9e4cf5)
 
@@ -49,9 +49,9 @@ X(mean) = [ X1(mean) X2(mean) X3(mean) …… XN(mean) ] and subtract mean colum
 
 **=> Step-6** Sorting Eigen vectors by corresponding Eigen values in descending order
 
-**=> Step-7** Then we are asking user to input the number of principal components M according to user’s need.
+**=> Step-7** Then I asked user to input the number of principal components M according to user’s need.
 
-**=> Step-8** Then we form matrix B from M(M<D) Eigen vectors and perform dimensionality reduction
+**=> Step-8** Then I form matrix B from M(M<D) Eigen vectors and perform dimensionality reduction
 
 ![image](https://github.com/Satya-bit/Image-compression-using-Principal-Component-Analysisi-/assets/70309925/a2b9e684-e797-47af-a45c-d9646e9b219b)
 
